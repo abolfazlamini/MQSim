@@ -1,11 +1,12 @@
 # MQSim: A Simulator for Modern NVMe and SATA SSDs
 
-## ERGCO Method: 
-Abstract
+## ERGCO Method:
 
+###Abstract:
 Solid state drives have endurance issues in a high-performance computing (HPC) environment because of their cells/blocks’ limited lifetime. Hence, the SSD block allocation and reclamation policies have a significant impact on its lifetime improvement. To address this problem, the methods considering the block erase count and invalid pages count of a block along with block hotness identification proposed in this research. The comprehensive experiments using synthetic workloads are performed. The MQ-Sim simulation environment is extended to implement this method. The results reveal that in comparison with other methods, the proposed method reducing garbage collection overhead slightly and improve endurance of SSD. The main impact of proposed method is in workloads which 50% of regions are hot. The improvement is about 2 percent in comparison with SBM in 50% hot regions.
 
-Keywords: Solid-state drive (SSD), Garbage collection, Block hotness identification, Victim block selection, High-performance computing (HPC)
+###Keywords:
+Solid-state drive (SSD), Garbage collection, Block hotness identification, Victim block selection, High-performance computing (HPC)
 
 ## Usage in Linux
 Run following commands:
