@@ -571,6 +571,16 @@ void Device_Parameter_Set::XML_deserialize(rapidxml::xml_node<> *node)
 					GC_Block_Selection_Policy = SSD_Components::GC_Block_Selection_Policy_Type::RANDOM_PP;
 				} else if (strcmp(val.c_str(), "FIFO") == 0) {
 					GC_Block_Selection_Policy = SSD_Components::GC_Block_Selection_Policy_Type::FIFO;
+				} else if (strcmp(val.c_str(), "ERGCO") == 0) {//amini
+					GC_Block_Selection_Policy = SSD_Components::GC_Block_Selection_Policy_Type::ERGCO;
+				} else if (strcmp(val.c_str(), "RGCO") == 0) {//amini
+					GC_Block_Selection_Policy = SSD_Components::GC_Block_Selection_Policy_Type::RGCO;
+				} else if (strcmp(val.c_str(), "SBM") == 0) {//amini
+					GC_Block_Selection_Policy = SSD_Components::GC_Block_Selection_Policy_Type::SBM;
+				} else if (strcmp(val.c_str(), "CB") == 0) {
+					GC_Block_Selection_Policy = SSD_Components::GC_Block_Selection_Policy_Type::CB;
+				} else if (strcmp(val.c_str(), "CAT") == 0) {
+					GC_Block_Selection_Policy = SSD_Components::GC_Block_Selection_Policy_Type::CAT;//inima
 				} else {
 					PRINT_ERROR("Unknown GC block selection policy specified in the SSD configuration file")
 				}

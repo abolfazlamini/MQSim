@@ -454,6 +454,74 @@ namespace SSD_Components
 						Utils::Euler_estimation(steadystate_block_status_probability, page_no_per_block, rho, GC_and_WL_Unit->Get_GC_policy_specific_parameter(), 0.001, 0.0000000001, 10000);
 						break;
 					}
+					//amini
+					case GC_Block_Selection_Policy_Type::ERGCO:
+					{
+						for (unsigned int i = 0; i <= page_no_per_block; i++) {
+							steadystate_block_status_probability.push_back(rho / (rho + std::pow(1 - rho, i)));
+							for (unsigned int j = i + 1; j <= page_no_per_block; j++) {
+								steadystate_block_status_probability[i] *= ((1 - rho) * j) / (rho + (1 - rho) * j);
+							}
+						}
+						for (int i = page_no_per_block; i > 0; i--) {
+							steadystate_block_status_probability[i] = steadystate_block_status_probability[i] - steadystate_block_status_probability[i - 1];
+						}
+						break;
+					}
+					case GC_Block_Selection_Policy_Type::RGCO:
+					{
+						for (unsigned int i = 0; i <= page_no_per_block; i++) {
+							steadystate_block_status_probability.push_back(rho / (rho + std::pow(1 - rho, i)));
+							for (unsigned int j = i + 1; j <= page_no_per_block; j++) {
+								steadystate_block_status_probability[i] *= ((1 - rho) * j) / (rho + (1 - rho) * j);
+							}
+						}
+						for (int i = page_no_per_block; i > 0; i--) {
+							steadystate_block_status_probability[i] = steadystate_block_status_probability[i] - steadystate_block_status_probability[i - 1];
+						}
+						break;
+					}
+					case GC_Block_Selection_Policy_Type::SBM:
+					{
+						for (unsigned int i = 0; i <= page_no_per_block; i++) {
+							steadystate_block_status_probability.push_back(rho / (rho + std::pow(1 - rho, i)));
+							for (unsigned int j = i + 1; j <= page_no_per_block; j++) {
+								steadystate_block_status_probability[i] *= ((1 - rho) * j) / (rho + (1 - rho) * j);
+							}
+						}
+						for (int i = page_no_per_block; i > 0; i--) {
+							steadystate_block_status_probability[i] = steadystate_block_status_probability[i] - steadystate_block_status_probability[i - 1];
+						}
+						break;
+					}
+					case GC_Block_Selection_Policy_Type::CB:
+					{
+						for (unsigned int i = 0; i <= page_no_per_block; i++) {
+							steadystate_block_status_probability.push_back(rho / (rho + std::pow(1 - rho, i)));
+							for (unsigned int j = i + 1; j <= page_no_per_block; j++) {
+								steadystate_block_status_probability[i] *= ((1 - rho) * j) / (rho + (1 - rho) * j);
+							}
+						}
+						for (int i = page_no_per_block; i > 0; i--) {
+							steadystate_block_status_probability[i] = steadystate_block_status_probability[i] - steadystate_block_status_probability[i - 1];
+						}
+						break;
+					}
+					case GC_Block_Selection_Policy_Type::CAT:
+					{
+						for (unsigned int i = 0; i <= page_no_per_block; i++) {
+							steadystate_block_status_probability.push_back(rho / (rho + std::pow(1 - rho, i)));
+							for (unsigned int j = i + 1; j <= page_no_per_block; j++) {
+								steadystate_block_status_probability[i] *= ((1 - rho) * j) / (rho + (1 - rho) * j);
+							}
+						}
+						for (int i = page_no_per_block; i > 0; i--) {
+							steadystate_block_status_probability[i] = steadystate_block_status_probability[i] - steadystate_block_status_probability[i - 1];
+						}
+						break;
+					}
+
+					//inima
 					case GC_Block_Selection_Policy_Type::RANDOM:
 					case GC_Block_Selection_Policy_Type::RANDOM_P://Based on: B. Van Houdt, "A mean field model for a class of garbage collection algorithms in flash-based solid state drives", SIGMETRICS 2013.
 					{
@@ -566,6 +634,71 @@ namespace SSD_Components
 							steadystate_block_status_probability.push_back(Utils::Combination_count(page_no_per_block, i) * std::pow(rho, i) * std::pow(1 - rho, page_no_per_block - i));
 						}
 						Utils::Euler_estimation(steadystate_block_status_probability, page_no_per_block, rho, GC_and_WL_Unit->Get_GC_policy_specific_parameter(), 0.001, 0.0000000001, 10000);
+						break;
+					}
+					case GC_Block_Selection_Policy_Type::ERGCO://Based on: B. Van Houdt, "A mean field model for a class of garbage collection algorithms in flash-based solid state drives", SIGMETRICS 2013.
+					{
+						for (unsigned int i = 0; i <= page_no_per_block; i++) {
+							steadystate_block_status_probability.push_back(rho / (rho + std::pow(1 - rho, i)));
+							for (unsigned int j = i + 1; j <= page_no_per_block; j++) {
+								steadystate_block_status_probability[i] *= ((1 - rho) * j) / (rho + (1 - rho) * j);
+							}
+						}
+						for (int i = page_no_per_block; i > 0; i--) {
+							steadystate_block_status_probability[i] = steadystate_block_status_probability[i] - steadystate_block_status_probability[i - 1];
+						}
+						break;
+					}
+					case GC_Block_Selection_Policy_Type::RGCO://Based on: B. Van Houdt, "A mean field model for a class of garbage collection algorithms in flash-based solid state drives", SIGMETRICS 2013.
+					{
+						for (unsigned int i = 0; i <= page_no_per_block; i++) {
+							steadystate_block_status_probability.push_back(rho / (rho + std::pow(1 - rho, i)));
+							for (unsigned int j = i + 1; j <= page_no_per_block; j++) {
+								steadystate_block_status_probability[i] *= ((1 - rho) * j) / (rho + (1 - rho) * j);
+							}
+						}
+						for (int i = page_no_per_block; i > 0; i--) {
+							steadystate_block_status_probability[i] = steadystate_block_status_probability[i] - steadystate_block_status_probability[i - 1];
+						}
+						break;
+					}
+					case GC_Block_Selection_Policy_Type::SBM://Based on: B. Van Houdt, "A mean field model for a class of garbage collection algorithms in flash-based solid state drives", SIGMETRICS 2013.
+					{
+						for (unsigned int i = 0; i <= page_no_per_block; i++) {
+							steadystate_block_status_probability.push_back(rho / (rho + std::pow(1 - rho, i)));
+							for (unsigned int j = i + 1; j <= page_no_per_block; j++) {
+								steadystate_block_status_probability[i] *= ((1 - rho) * j) / (rho + (1 - rho) * j);
+							}
+						}
+						for (int i = page_no_per_block; i > 0; i--) {
+							steadystate_block_status_probability[i] = steadystate_block_status_probability[i] - steadystate_block_status_probability[i - 1];
+						}
+						break;
+					}
+					case GC_Block_Selection_Policy_Type::CAT://Based on: B. Van Houdt, "A mean field model for a class of garbage collection algorithms in flash-based solid state drives", SIGMETRICS 2013.
+					{
+						for (unsigned int i = 0; i <= page_no_per_block; i++) {
+							steadystate_block_status_probability.push_back(rho / (rho + std::pow(1 - rho, i)));
+							for (unsigned int j = i + 1; j <= page_no_per_block; j++) {
+								steadystate_block_status_probability[i] *= ((1 - rho) * j) / (rho + (1 - rho) * j);
+							}
+						}
+						for (int i = page_no_per_block; i > 0; i--) {
+							steadystate_block_status_probability[i] = steadystate_block_status_probability[i] - steadystate_block_status_probability[i - 1];
+						}
+						break;
+					}
+					case GC_Block_Selection_Policy_Type::CB://Based on: B. Van Houdt, "A mean field model for a class of garbage collection algorithms in flash-based solid state drives", SIGMETRICS 2013.
+					{
+						for (unsigned int i = 0; i <= page_no_per_block; i++) {
+							steadystate_block_status_probability.push_back(rho / (rho + std::pow(1 - rho, i)));
+							for (unsigned int j = i + 1; j <= page_no_per_block; j++) {
+								steadystate_block_status_probability[i] *= ((1 - rho) * j) / (rho + (1 - rho) * j);
+							}
+						}
+						for (int i = page_no_per_block; i > 0; i--) {
+							steadystate_block_status_probability[i] = steadystate_block_status_probability[i] - steadystate_block_status_probability[i - 1];
+						}
 						break;
 					}
 					case GC_Block_Selection_Policy_Type::RANDOM:
@@ -879,6 +1012,14 @@ namespace SSD_Components
 
 		attr = "Total_WL_Executions";
 		val = std::to_string(Stats::Total_wl_executions);
+		xmlwriter.Write_attribute_string_inline(attr, val);
+
+		attr = "Average_Block_Erase_Count";
+		val = std::to_string(Stats::AverageBlockEraseCount);
+		xmlwriter.Write_attribute_string_inline(attr, val);
+		
+		attr = "Standard_Deviation_Block_Erase_Count";
+		val = std::to_string(Stats::SDBEC);
 		xmlwriter.Write_attribute_string_inline(attr, val);
 
 		attr = "Average_Page_Movement_For_WL";

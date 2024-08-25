@@ -22,6 +22,7 @@ namespace NVM
 			unsigned long Erase_count;
 			stream_id_type* Allocated_streams;
 		};
+		
 	}
 }
 #endif // !PLANE_H

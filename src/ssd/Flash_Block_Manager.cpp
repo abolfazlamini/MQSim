@@ -1,7 +1,7 @@
-
 #include "../nvm_chip/flash_memory/Physical_Page_Address.h"
 #include "Flash_Block_Manager.h"
 #include "Stats.h"
+#include "chrono"
 
 namespace SSD_Components
 {
@@ -16,7 +16,7 @@ namespace SSD_Components
 	Flash_Block_Manager::~Flash_Block_Manager()
 	{
 	}
-
+	//amini point write by user +1
 	void Flash_Block_Manager::Allocate_block_and_page_in_plane_for_user_write(const stream_id_type stream_id, NVM::FlashMemory::Physical_Page_Address& page_address)
 	{
 		PlaneBookKeepingType *plane_record = &plane_manager[page_address.ChannelID][page_address.ChipID][page_address.DieID][page_address.PlaneID];
@@ -25,6 +25,16 @@ namespace SSD_Components
 		page_address.BlockID = plane_record->Data_wf[stream_id]->BlockID;
 		page_address.PageID = plane_record->Data_wf[stream_id]->Current_page_write_index++;
 		program_transaction_issued(page_address);
+
+		//amini
+		plane_record->Blocks[page_address.BlockID].SetModificationTime();
+		plane_record->Blocks[page_address.BlockID].IncreaseScore(1);
+		plane_record->Blocks[page_address.BlockID].Allocate();		
+		plane_record->Blocks[page_address.BlockID].IncreaseNOW(1);
+		plane_record->Blocks[page_address.BlockID].Pages[page_address.PageID].NoW++;
+		plane_record->Blocks[page_address.BlockID].Pages[page_address.PageID].Last_modification_time =  std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();		
+		//plane_record->Blocks[page_address.BlockID].Pages[page_address.PageID].
+		//inima
 
 		//The current write frontier block is written to the end
 		if(plane_record->Data_wf[stream_id]->Current_page_write_index == pages_no_per_block) {
@@ -36,6 +46,7 @@ namespace SSD_Components
 		plane_record->Check_bookkeeping_correctness(page_address);
 	}
 
+	//amini point write by gc +2
 	void Flash_Block_Manager::Allocate_block_and_page_in_plane_for_gc_write(const stream_id_type stream_id, NVM::FlashMemory::Physical_Page_Address& page_address)
 	{
 		PlaneBookKeepingType *plane_record = &plane_manager[page_address.ChannelID][page_address.ChipID][page_address.DieID][page_address.PlaneID];
@@ -43,7 +54,22 @@ namespace SSD_Components
 		plane_record->Free_pages_count--;		
 		page_address.BlockID = plane_record->GC_wf[stream_id]->BlockID;
 		page_address.PageID = plane_record->GC_wf[stream_id]->Current_page_write_index++;
-
+		//amini
+		//if(plane_record->Blocks[page_address.BlockID].Erase_count==0){
+		plane_record->Blocks[page_address.BlockID].SetModificationTime();
+		plane_record->Blocks[page_address.BlockID].IncreaseScore(2);
+		plane_record->Blocks[page_address.BlockID].Allocate();
+		plane_record->Blocks[page_address.BlockID].IncreaseNOW(1);
+		
+		plane_record->Blocks[page_address.BlockID].Pages[page_address.PageID].NoW++;
+		plane_record->Blocks[page_address.BlockID].Pages[page_address.PageID].Last_modification_time =  std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();		
+		
+		// }else{
+		// plane_record->Blocks[page_address.BlockID].IncreaseScore(plane_record->Blocks[page_address.BlockID].Erase_count*1);
+		// plane_record->Blocks[page_address.BlockID].Allocate();
+		// }
+		//plane_record->Blocks[page_address.BlockID].SetGcWriteTime();
+		//inima
 		
 		//The current write frontier block is written to the end
 		if (plane_record->GC_wf[stream_id]->Current_page_write_index == pages_no_per_block) {
@@ -105,14 +131,32 @@ namespace SSD_Components
 				gc_and_wl_unit->Check_gc_required(plane_record->Get_free_block_pool_size(), page_address);
 			}
 		}
+
+		//amini
+		// plane_record->Blocks[page_address.BlockID].IncreaseScore(1);
+		// plane_record->Blocks[page_address.BlockID].Allocate();
+		//inima
+
 		plane_record->Check_bookkeeping_correctness(page_address);
 	}
-
+	//amini 
 	inline void Flash_Block_Manager::Invalidate_page_in_block(const stream_id_type stream_id, const NVM::FlashMemory::Physical_Page_Address& page_address)
 	{
 		PlaneBookKeepingType* plane_record = &plane_manager[page_address.ChannelID][page_address.ChipID][page_address.DieID][page_address.PlaneID];
 		plane_record->Invalid_pages_count++;
 		plane_record->Valid_pages_count--;
+		
+		//amini
+		plane_record->Blocks[page_address.BlockID].SetModificationTime();
+		plane_record->Blocks[page_address.BlockID].DecreaseScore(1);
+		plane_record->Blocks[page_address.BlockID].Allocate();
+		
+		plane_record->Blocks[page_address.BlockID].IncreaseNOW(1);
+		plane_record->Blocks[page_address.BlockID].Pages[page_address.PageID].Last_modification_time =  std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();		
+		plane_record->Blocks[page_address.BlockID].Pages[page_address.PageID].NoW++;		
+
+		//inima
+
 		if (plane_record->Blocks[page_address.BlockID].Stream_id != stream_id) {
 			PRINT_ERROR("Inconsistent status in the Invalidate_page_in_block function! The accessed block is not allocated to stream " << stream_id)
 		}
@@ -127,19 +171,35 @@ namespace SSD_Components
 		if (plane_record->Blocks[page_address.BlockID].Stream_id != stream_id) {
 			PRINT_ERROR("Inconsistent status in the Invalidate_page_in_block function! The accessed block is not allocated to stream " << stream_id)
 		}
+
+		//amini
+		// plane_record->Blocks[page_address.BlockID].DescreaseScore(1);
+		// plane_record->Blocks[page_address.BlockID].Allocate();
+		//inima
+		PRINT_MESSAGE("HERE");
+
 		plane_record->Blocks[page_address.BlockID].Invalid_page_count++;
 		plane_record->Blocks[page_address.BlockID].Invalid_page_bitmap[page_address.PageID / 64] |= ((uint64_t)0x1) << (page_address.PageID % 64);
 	}
-
+	//amini point +2
 	void Flash_Block_Manager::Add_erased_block_to_pool(const NVM::FlashMemory::Physical_Page_Address& block_address)
 	{
 		PlaneBookKeepingType *plane_record = &plane_manager[block_address.ChannelID][block_address.ChipID][block_address.DieID][block_address.PlaneID];
+		//amini
+		plane_record->Blocks[block_address.BlockID].IncreaseScore(1);
+		plane_record->Blocks[block_address.BlockID].UnAllocate();
+		plane_record->Blocks[block_address.BlockID].SetModificationTime();
+		
+		plane_record->Blocks[block_address.BlockID].IncreaseNOW(1);
+		// plane_record->Blocks[block_address.BlockID].SetEraseTime();
+		//inima
 		Block_Pool_Slot_Type* block = &(plane_record->Blocks[block_address.BlockID]);
 		plane_record->Free_pages_count += block->Invalid_page_count;
 		plane_record->Invalid_pages_count -= block->Invalid_page_count;
 
 		Stats::Block_erase_histogram[block_address.ChannelID][block_address.ChipID][block_address.DieID][block_address.PlaneID][block->Erase_count]--;
 		block->Erase();
+
 		Stats::Block_erase_histogram[block_address.ChannelID][block_address.ChipID][block_address.DieID][block_address.PlaneID][block->Erase_count]++;
 		plane_record->Add_to_free_block_pool(block, gc_and_wl_unit->Use_dynamic_wearleveling());
 		plane_record->Check_bookkeeping_correctness(block_address);

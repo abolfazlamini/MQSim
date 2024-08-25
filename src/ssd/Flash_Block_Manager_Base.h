@@ -8,11 +8,45 @@
 #include "../nvm_chip/flash_memory/FlashTypes.h"
 #include "../nvm_chip/flash_memory/Physical_Page_Address.h"
 #include "GC_and_WL_Unit_Base.h"
-#include "../nvm_chip/flash_memory/FlashTypes.h"
+#include "../nvm_chip/flash_memory/Die.h"
+#include "../nvm_chip/flash_memory/Physical_Page_Address.h"
 
 namespace SSD_Components
 {
 #define All_VALID_PAGE 0x0000000000000000ULL
+	//amini
+	template<typename T1, typename T2, typename T3>	struct BlockScore
+	{
+			T1 Id;
+			T2 Score;
+			T3 Valid;
+	};
+	struct comp
+	{
+		template<typename T>
+		bool operator()(const T& lhs, const T& rhs) const
+		{ 
+			return lhs.Score < rhs.Score || ((!(rhs.Score < lhs.Score)) && (lhs.Id < rhs.Id || lhs.Id > rhs.Id));		
+		}
+	};
+
+	class PlaneBlockStatus
+	{
+		public:
+			PlaneBlockStatus();
+			PlaneBlockStatus(uint32_t plane_id, uint32_t block_id, int score);
+			virtual ~PlaneBlockStatus();
+
+			uint32_t GetPlaneID();
+			uint32_t GetBlockID();
+			int GetQueueType();
+		private:
+			uint32_t plane_id;
+			uint32_t block_id;
+			int queue_type;//1 allocated, 0 erased
+	};
+	//inima
+
 	class GC_and_WL_Unit_Base;
 	/*
 	* Block_Service_Status is used to impelement a state machine for each physical block in order to
@@ -25,7 +59,7 @@ namespace SSD_Components
 	* 5: GC_USER -> GC
 	*/
 	enum class Block_Service_Status {IDLE, GC_WL, USER, GC_USER, GC_UWAIT, GC_USER_UWAIT};
-	
+
 	class Block_Pool_Slot_Type
 	{
 	public:
@@ -44,11 +78,33 @@ namespace SSD_Components
 		int Ongoing_user_read_count;
 		int Ongoing_user_program_count;
 		void Erase();
+	//amini
+		NVM::FlashMemory::Physical_Page_Address* Pages;
+        int GetScore();
+        void IncreaseScore(int scr);
+        void DecreaseScore(int scr);
+		void Allocate();
+		void UnAllocate();
+        bool IsAllocated();
+        int Score;
+		void IncreaseNOW(int wr);
+		void SetModificationTime();
+		int64_t Last_modification_time;
+        bool Allocated;
+		int Number_of_writes;
+		//sample BlockScore blockSample = BlockScore(page_address.BlockID, 0); 
+		//sample plane_record->AllocatedBlocks.push(blockSample);
+	//inima
 	};
 
 	class PlaneBookKeepingType
 	{
 	public:
+		//amini
+		//std::set<BlockScore<uint32_t,int,bool>, comp> ErasedBlocks;
+		//std::set<BlockScore<uint32_t,int,bool>, comp> BlocksScoringSet;
+		//std::vector<PlaneBlockStatus> GlobalPlaneBlocksTable;
+		//inima
 		unsigned int Total_pages_count;
 		unsigned int Free_pages_count;
 		unsigned int Valid_pages_count;
@@ -64,7 +120,7 @@ namespace SSD_Components
 		void Check_bookkeeping_correctness(const NVM::FlashMemory::Physical_Page_Address& plane_address);
 		void Add_to_free_block_pool(Block_Pool_Slot_Type* block, bool consider_dynamic_wl);
 	};
-
+		
 	class Flash_Block_Manager_Base
 	{
 		friend class Address_Mapping_Unit_Page_Level;

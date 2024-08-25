@@ -154,9 +154,10 @@ namespace SSD_Components
 				pbke->Ongoing_erase_operations.erase(pbke->Ongoing_erase_operations.find(transaction->Address.BlockID));
 				_my_instance->block_manager->Add_erased_block_to_pool(transaction->Address);
 				_my_instance->block_manager->GC_WL_finished(transaction->Address);
-				if (_my_instance->check_static_wl_required(transaction->Address)) {
-					_my_instance->run_static_wearleveling(transaction->Address);
-				}
+				//amini
+				// if (_my_instance->check_static_wl_required(transaction->Address)) {
+				// 	_my_instance->run_static_wearleveling(transaction->Address);
+				// }
 				_my_instance->address_mapping_unit->Start_servicing_writes_for_overfull_plane(transaction->Address);//Must be inovked after above statements since it may lead to flash page consumption for waiting program transactions
 
 				if (_my_instance->Stop_servicing_writes(transaction->Address)) {
@@ -273,7 +274,7 @@ namespace SSD_Components
 				NVM_Transaction_Flash_WR* wl_write = NULL;
 				for (flash_page_ID_type pageID = 0; pageID < block->Current_page_write_index; pageID++) {
 					if (block_manager->Is_page_valid(block, pageID)) {
-						Stats::Total_page_movements_for_gc;
+						Stats::Total_page_movements_for_wl++;
 						wl_candidate_address.PageID = pageID;
 						if (use_copyback) {
 							wl_write = new NVM_Transaction_Flash_WR(Transaction_Source_Type::GC_WL, block->Stream_id, sector_no_per_page * SECTOR_SIZE_IN_BYTE,

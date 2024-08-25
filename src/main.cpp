@@ -248,6 +248,20 @@ void collect_results(SSD_Device& ssd, Host_System& host, const char* output_file
 		cout << "                   - device response time: " << IO_flows[stream_id]->Get_device_response_time() << " (us)"
 			<< " end-to-end request delay:" << IO_flows[stream_id]->Get_end_to_end_request_delay() << " (us)" << endl;
 	}
+	//amini
+	for(unsigned int channel_id = 0; channel_id < ssd.Channel_count; channel_id++){
+		for(unsigned int chip_id = 0; chip_id < ssd.Chip_no_per_channel; chip_id++){
+			for(unsigned int die_id = 0; die_id < 2; die_id++){
+				for(unsigned int plane_id = 0; plane_id < 2; plane_id++){
+
+				}
+
+			}
+		}
+	}
+	
+	//inima
+
 }
 
 void print_help()

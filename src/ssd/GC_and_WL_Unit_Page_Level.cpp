@@ -1,6 +1,7 @@
 #include <math.h>
 #include <vector>
 #include <set>
+#include <chrono>
 #include "GC_and_WL_Unit_Page_Level.h"
 #include "Flash_Block_Manager.h"
 #include "FTL.h"
@@ -42,6 +43,8 @@ namespace SSD_Components
 
 	void GC_and_WL_Unit_Page_Level::Check_gc_required(const unsigned int free_block_pool_size, const NVM::FlashMemory::Physical_Page_Address& plane_address)
 	{
+		int64_t timeNow = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+
 		if (free_block_pool_size < block_pool_gc_threshold) {
 			flash_block_ID_type gc_candidate_block_id = block_manager->Get_coldest_block_id(plane_address);
 			PlaneBookKeepingType* pbke = block_manager->Get_plane_bookkeeping_entry(plane_address);
@@ -51,6 +54,158 @@ namespace SSD_Components
 			}
 
 			switch (block_selection_policy) {
+				//amini
+
+				case SSD_Components::GC_Block_Selection_Policy_Type::ERGCO:
+				{
+					double min_score = 500;
+					double last_hottness = 1000000;
+					double last_block_hotness = 1000000;
+					
+					for (flash_block_ID_type block_id = 0; block_id < block_no_per_plane; block_id++) {
+						double current_hotness =double(pbke->Blocks[block_id].Number_of_writes)/double(timeNow-pbke->Blocks[block_id].Last_modification_time);
+						
+						double current_score= double(pbke->Blocks[block_id].Erase_count+1)/double(pbke->Blocks[block_id].Invalid_page_count+1);
+
+						if ( current_score <= min_score
+						    && pbke->Blocks[block_id].Current_page_write_index == pages_no_per_block
+							&& is_safe_gc_wl_candidate(pbke, block_id)) {
+								gc_candidate_block_id = block_id;
+								if(pbke->Blocks[block_id].Invalid_page_count == pages_no_per_block){
+									break;
+								}
+								min_score = current_score;
+							double totalValidPagesWrites=0;
+							double totalSpentTime =0;
+							double cnt=0;
+							for (int p = 0; p < 128; p++){
+								if(block_manager->Is_page_valid(&pbke->Blocks[block_id], p)){
+									totalValidPagesWrites += double(pbke->Blocks[block_id].Pages[p].NoW);
+									totalSpentTime += double(pbke->Blocks[block_id].Pages[p].Last_modification_time);
+									cnt++;
+								}
+							}
+							double detailed_hotness = totalValidPagesWrites/((cnt*double(timeNow))-totalSpentTime);
+
+							if (detailed_hotness < last_hottness || current_hotness < last_block_hotness){
+								gc_candidate_block_id = block_id;
+								min_score = current_score;
+								last_hottness = detailed_hotness;
+								last_block_hotness = current_hotness;
+							}
+						}
+					}
+					break;
+				}
+				
+				case SSD_Components::GC_Block_Selection_Policy_Type::RGCO:
+				{
+					double min_score = 500;
+					double Ec=0;
+					for (flash_block_ID_type block_id = 1; block_id < block_no_per_plane; block_id++) {
+						Ec = pbke->Blocks[block_id].Erase_count+1;
+						double current_score =Ec+double(pbke->Blocks[block_id].GetScore());
+						if (current_score < min_score
+						    && pbke->Blocks[block_id].IsAllocated()
+							&& pbke->Blocks[block_id].Current_page_write_index == pages_no_per_block
+							&& is_safe_gc_wl_candidate(pbke, block_id) ) {
+							gc_candidate_block_id = block_id;
+							min_score = current_score;
+						}
+					}
+					break;
+				}
+				case SSD_Components::GC_Block_Selection_Policy_Type::SBM:
+				{
+					int64_t min_score = 500;
+					for (flash_block_ID_type block_id = 1; block_id < block_no_per_plane; block_id++) {
+
+						if (pbke->Blocks[block_id].GetScore() < min_score
+						    && pbke->Blocks[block_id].IsAllocated()
+							&& pbke->Blocks[block_id].Current_page_write_index == pages_no_per_block
+							&& is_safe_gc_wl_candidate(pbke, block_id) ) {
+							gc_candidate_block_id = block_id;
+							min_score = pbke->Blocks[block_id].GetScore();
+						}
+					}
+					break;
+				}
+				// case SSD_Components::GC_Block_Selection_Policy_Type::ERGCO:
+				// {
+				// 	double min_score = 500;
+					
+				// 	for (flash_block_ID_type block_id = 1; block_id < block_no_per_plane; block_id++) {
+				// 		// int Ec=0;
+				// 		// Ec = pbke->Blocks[block_id].Erase_count+1;
+
+				// 		if (double(pbke->Blocks[block_id].Erase_count+1)/double(pbke->Blocks[block_id].Invalid_page_count) < min_score
+				// 		    && pbke->Blocks[block_id].Current_page_write_index == pages_no_per_block
+				// 			&& is_safe_gc_wl_candidate(pbke, block_id) ) {
+				// 			gc_candidate_block_id = block_id;
+				// 			min_score = double(pbke->Blocks[block_id].Erase_count+1)/double(pbke->Blocks[block_id].Invalid_page_count);
+				// 		}
+				// 	}
+				// 	break;
+				// }
+				// case SSD_Components::GC_Block_Selection_Policy_Type::ERGCO:
+				// {
+				// 	int64_t min_score = 1;
+					
+				// 	for (flash_block_ID_type block_id = 1; block_id < block_no_per_plane; block_id++) {
+				// 		if (pbke->Blocks[block_id].Last_erase_time < min_score
+				// 			&& pbke->Blocks[block_id].Current_page_write_index == pages_no_per_block
+				// 			&& is_safe_gc_wl_candidate(pbke, block_id) ) {
+				// 			gc_candidate_block_id = block_id;
+				// 			min_score = pbke->Blocks[block_id].Last_erase_time;
+				// 		}
+				// 	}
+				// 	break;
+				// }
+				
+				case SSD_Components::GC_Block_Selection_Policy_Type::CB:
+				{
+					double max_candidate=0;
+					double i_p_ratio = 0;
+					//int64_t timeNow = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+					double timeSpent;
+					for (flash_block_ID_type block_id = 1; block_id < block_no_per_plane; block_id++) {
+						timeSpent = double(timeNow) - double(pbke->Blocks[block_id].Last_modification_time);
+						i_p_ratio = double(pbke->Blocks[block_id].Invalid_page_count)/double(pages_no_per_block);
+
+						if ((timeSpent*(1-i_p_ratio))/2*i_p_ratio > max_candidate
+							&& pbke->Blocks[block_id].Current_page_write_index == pages_no_per_block
+							&& is_safe_gc_wl_candidate(pbke, block_id) ) {
+							gc_candidate_block_id = block_id;
+							max_candidate = (timeSpent*(1-i_p_ratio))/2*i_p_ratio;
+						}
+					}
+					break;
+				}
+				
+				case SSD_Components::GC_Block_Selection_Policy_Type::CAT:
+				{
+					double min_candidate=100000;
+					double i_p_ratio = 0;
+					//unsigned __int64 timeNow = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+					double timeSpent;
+					for (flash_block_ID_type block_id = 1; block_id < block_no_per_plane; block_id++) {
+						
+						double Ec = double(pbke->Blocks[block_id].Erase_count+1);
+
+						timeSpent = double(timeNow) - double(pbke->Blocks[block_id].Last_modification_time);
+						
+						i_p_ratio = double(pbke->Blocks[block_id].Invalid_page_count)/double(pages_no_per_block);
+
+						if ((i_p_ratio/(1-i_p_ratio))*(1/(timeSpent))*Ec < min_candidate
+							&& pbke->Blocks[block_id].Current_page_write_index == pages_no_per_block
+							&& is_safe_gc_wl_candidate(pbke, block_id) ) {
+							gc_candidate_block_id = block_id;
+							min_candidate = (i_p_ratio/(1-i_p_ratio))*(1/(timeSpent))*Ec;
+						}
+					}
+					break;
+				}
+				//inima
 				case SSD_Components::GC_Block_Selection_Policy_Type::GREEDY://Find the set of blocks with maximum number of invalid pages and no free pages
 				{
 					gc_candidate_block_id = 0;
@@ -91,8 +246,11 @@ namespace SSD_Components
 					unsigned int repeat = 0;
 
 					//A write frontier block should not be selected for garbage collection
-					while (!is_safe_gc_wl_candidate(pbke, gc_candidate_block_id) && repeat++ < block_no_per_plane) {
-						gc_candidate_block_id = random_generator.Uniform_uint(0, block_no_per_plane - 1);
+					if(!is_safe_gc_wl_candidate(pbke,gc_candidate_block_id)){
+						do{
+							gc_candidate_block_id = random_generator.Uniform_uint(0, block_no_per_plane - 1);
+							repeat++;
+						}while (!is_safe_gc_wl_candidate(pbke, gc_candidate_block_id) && repeat < pages_no_per_block);
 					}
 					break;
 				}
@@ -101,25 +259,42 @@ namespace SSD_Components
 					gc_candidate_block_id = random_generator.Uniform_uint(0, block_no_per_plane - 1);
 					unsigned int repeat = 0;
 
-					//A write frontier block or a block with free pages should not be selected for garbage collection
-					while ((pbke->Blocks[gc_candidate_block_id].Current_page_write_index < pages_no_per_block || !is_safe_gc_wl_candidate(pbke, gc_candidate_block_id))
-						&& repeat++ < block_no_per_plane) {
-						gc_candidate_block_id = random_generator.Uniform_uint(0, block_no_per_plane - 1);
+					//amini
+					if(!is_safe_gc_wl_candidate(pbke,gc_candidate_block_id)  || pbke->Blocks[gc_candidate_block_id].Current_page_write_index < pages_no_per_block){
+						do{
+							gc_candidate_block_id = random_generator.Uniform_uint(0, block_no_per_plane - 1);
+							repeat++;
+						}while((pbke->Blocks[gc_candidate_block_id].Current_page_write_index < pages_no_per_block || !is_safe_gc_wl_candidate(pbke, gc_candidate_block_id)) && repeat < pages_no_per_block);
 					}
-					break;
+					//inima
+
+					//A write frontier block or a block with free pages should not be selected for garbage collection
+					// while ((pbke->Blocks[gc_candidate_block_id].Current_page_write_index < pages_no_per_block || !is_safe_gc_wl_candidate(pbke, gc_candidate_block_id))
+					// 	&& repeat++ < block_no_per_plane) {
+					// 	gc_candidate_block_id = random_generator.Uniform_uint(0, block_no_per_plane - 1);
+					// }
+					// break;
 				}
 				case SSD_Components::GC_Block_Selection_Policy_Type::RANDOM_PP:
 				{
-					gc_candidate_block_id = random_generator.Uniform_uint(0, block_no_per_plane - 1);
+					//gc_candidate_block_id = random_generator.Uniform_uint(0, block_no_per_plane - 1);
 					unsigned int repeat = 0;
 
 					//The selected gc block should have a minimum number of invalid pages
-					while ((pbke->Blocks[gc_candidate_block_id].Current_page_write_index < pages_no_per_block 
-						|| pbke->Blocks[gc_candidate_block_id].Invalid_page_count < random_pp_threshold
-						|| !is_safe_gc_wl_candidate(pbke, gc_candidate_block_id))
-						&& repeat++ < block_no_per_plane) {
-						gc_candidate_block_id = random_generator.Uniform_uint(0, block_no_per_plane - 1);
-					}
+					// while ((pbke->Blocks[gc_candidate_block_id].Current_page_write_index < pages_no_per_block 
+					// 	|| pbke->Blocks[gc_candidate_block_id].Invalid_page_count < random_pp_threshold
+					// 	|| !is_safe_gc_wl_candidate(pbke, gc_candidate_block_id))
+					// 	&& repeat++ < block_no_per_plane) {
+					// 	gc_candidate_block_id = random_generator.Uniform_uint(0, block_no_per_plane - 1);
+					// }
+					do{
+							gc_candidate_block_id = random_generator.Uniform_uint(0, block_no_per_plane - 1);
+							repeat++;
+					}while (pbke->Blocks[gc_candidate_block_id].Current_page_write_index < pages_no_per_block 
+					 	|| pbke->Blocks[gc_candidate_block_id].Invalid_page_count < random_pp_threshold
+					 	|| !is_safe_gc_wl_candidate(pbke, gc_candidate_block_id) && repeat < pages_no_per_block);
+					
+
 					break;
 				}
 				case SSD_Components::GC_Block_Selection_Policy_Type::FIFO:
@@ -162,6 +337,7 @@ namespace SSD_Components
 					for (flash_page_ID_type pageID = 0; pageID < block->Current_page_write_index; pageID++) {
 						if (block_manager->Is_page_valid(block, pageID)) {
 							Stats::Total_page_movements_for_gc++;
+							pbke->Blocks[block->BlockID].DecreaseScore(1);
 							gc_candidate_address.PageID = pageID;
 							if (use_copyback) {
 								gc_write = new NVM_Transaction_Flash_WR(Transaction_Source_Type::GC_WL, block->Stream_id, sector_no_per_page * SECTOR_SIZE_IN_BYTE,

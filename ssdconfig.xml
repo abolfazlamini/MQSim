@@ -24,19 +24,19 @@
 		<Data_Cache_DRAM_tCL>13</Data_Cache_DRAM_tCL>
 		<Data_Cache_DRAM_tRP>13</Data_Cache_DRAM_tRP>
 		<Address_Mapping>PAGE_LEVEL</Address_Mapping>
-		<Ideal_Mapping_Table>false</Ideal_Mapping_Table>
+		<Ideal_Mapping_Table>true</Ideal_Mapping_Table>
 		<CMT_Capacity>2097152</CMT_Capacity>
 		<CMT_Sharing_Mode>SHARED</CMT_Sharing_Mode>
 		<Plane_Allocation_Scheme>CWDP</Plane_Allocation_Scheme>
 		<Transaction_Scheduling_Policy>PRIORITY_OUT_OF_ORDER</Transaction_Scheduling_Policy>
 		<Overprovisioning_Ratio>0.07</Overprovisioning_Ratio>
-		<GC_Exec_Threshold>0.05000</GC_Exec_Threshold>
-		<GC_Block_Selection_Policy>RGA</GC_Block_Selection_Policy>
+		<GC_Exec_Threshold>0.05</GC_Exec_Threshold>
+		<GC_Block_Selection_Policy>ERGCO</GC_Block_Selection_Policy>
 		<Use_Copyback_for_GC>false</Use_Copyback_for_GC>
 		<Preemptible_GC_Enabled>false</Preemptible_GC_Enabled>
-		<GC_Hard_Threshold>0.005000</GC_Hard_Threshold>
+		<GC_Hard_Threshold>0.005</GC_Hard_Threshold>
 		<Dynamic_Wearleveling_Enabled>true</Dynamic_Wearleveling_Enabled>
-		<Static_Wearleveling_Enabled>true</Static_Wearleveling_Enabled>
+		<Static_Wearleveling_Enabled>false</Static_Wearleveling_Enabled>
 		<Static_Wearleveling_Threshold>100</Static_Wearleveling_Threshold>
 		<Preferred_suspend_erase_time_for_read>700000</Preferred_suspend_erase_time_for_read>
 		<Preferred_suspend_erase_time_for_write>700000</Preferred_suspend_erase_time_for_write>
@@ -62,8 +62,8 @@
 			<Die_No_Per_Chip>2</Die_No_Per_Chip>
 			<Plane_No_Per_Die>2</Plane_No_Per_Die>
 			<Block_No_Per_Plane>2048</Block_No_Per_Plane>
-			<Page_No_Per_Block>256</Page_No_Per_Block>
-			<Page_Capacity>8192</Page_Capacity>
+			<Page_No_Per_Block>128</Page_No_Per_Block>
+			<Page_Capacity>4096</Page_Capacity>
 			<Page_Metadat_Capacity>448</Page_Metadat_Capacity>
 		</Flash_Parameter_Set>
 	</Device_Parameter_Set>

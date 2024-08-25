@@ -1781,11 +1781,18 @@ namespace SSD_Components
 					}
 				} else {
 					LPA_type lpa = flash_controller->Get_metadata(addr.ChannelID, addr.ChipID, addr.DieID, addr.PlaneID, addr.BlockID, addr.PageID);
-					LPA_type ppa = domains[block->Stream_id]->GlobalMappingTable[lpa].PPA;
+					PPA_type ppa = domains[block->Stream_id]->GlobalMappingTable[lpa].PPA;
 					if (domains[block->Stream_id]->CMT->Exists(block->Stream_id, lpa)) {
 						ppa = domains[block->Stream_id]->CMT->Retrieve_ppa(block->Stream_id, lpa);
 					}
 					if (ppa != Convert_address_to_ppa(addr)) {
+						PRINT_MESSAGE(ppa)
+						PRINT_MESSAGE(addr.PageID)
+						PRINT_MESSAGE(addr.BlockID)
+						PRINT_MESSAGE(addr.PlaneID)
+						PRINT_MESSAGE(addr.DieID)
+						PRINT_MESSAGE(addr.ChipID)
+						PRINT_MESSAGE(addr.ChannelID)
 						PRINT_ERROR("Inconsistency in the global mapping table when locking an LPA!")
 					}
 					Set_barrier_for_accessing_lpa(block->Stream_id, lpa);

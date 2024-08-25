@@ -16,6 +16,11 @@ namespace SSD_Components
 
 		static unsigned long IssuedSuspendProgramCMD, IssuedSuspendEraseCMD;
 
+		//amini
+		static float SDBEC;
+		static float AverageBlockEraseCount;
+		//inima
+
 		static unsigned long Total_flash_reads_for_mapping, Total_flash_writes_for_mapping;
 		static unsigned long Total_flash_reads_for_mapping_per_stream[MAX_SUPPORT_STREAMS], Total_flash_writes_for_mapping_per_stream[MAX_SUPPORT_STREAMS];
 

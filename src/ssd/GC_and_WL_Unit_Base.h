@@ -21,8 +21,15 @@ namespace SSD_Components
 		RANDOM, RANDOM_P, RANDOM_PP,/*The RANDOM, RANDOM+, and RANDOM++ algorithms described in: "B. Van Houdt, A Mean
 									Field Model  for a Class of Garbage Collection Algorithms in Flash - based Solid
 									State Drives, SIGMETRICS, 2013".*/
-		FIFO						/*The FIFO algortihm described in P. Desnoyers, "Analytic  Modeling  of  SSD Write
+		FIFO,						/*The FIFO algortihm described in P. Desnoyers, "Analytic  Modeling  of  SSD Write
 									Performance, SYSTOR, 2012".*/
+		//amini
+		ERGCO,
+		CAT,
+		CB,
+		SBM,
+		RGCO
+		//inima
 	};
 
 	class Address_Mapping_Unit_Base;
